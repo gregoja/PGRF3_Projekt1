@@ -5,25 +5,24 @@ import lwjglutils.OGLBuffers;
 public class GridFactory {
 
     /**
-     * @param a počet vracholu na radku
-     * @param b počet vrcholu ve sloupci
+     * @param a pocet vracholu na radku => pocet sloupcu + 1
+     * @param b pocet vrcholu ve sloupci => pocet radku + 1
      * @return OGLBuffers
      */
     public static OGLBuffers createSimpleGrid(int a, int b) {
-
         float[] vb = createVertexBuffer(a,b);
 
         int[] ib = new int[(a - 1) * (b - 1) * 2 * 3];
-        int index2 = 0;
+        int index = 0;
         for (int j = 0; j < b - 1; j++) {
             int offset = j * a;
             for (int i = 0; i < a - 1; i++) {
-                ib[index2++] = offset + i;
-                ib[index2++] = offset + i + 1;
-                ib[index2++] = offset + i + a;
-                ib[index2++] = offset + i + a;
-                ib[index2++] = offset + i + 1;
-                ib[index2++] = offset + i + a + 1;
+                ib[index++] = offset + i;
+                ib[index++] = offset + i + 1;
+                ib[index++] = offset + i + a;
+                ib[index++] = offset + i + a;
+                ib[index++] = offset + i + 1;
+                ib[index++] = offset + i + a + 1;
             }
         }
 
@@ -36,28 +35,26 @@ public class GridFactory {
     public static OGLBuffers createEfficientGrid(int a, int b){
         float[] vb = createVertexBuffer(a,b);
 
-        int index=0;
-        int[] ib = new int[2*a*2*b/2 + b*2];
-        for (int j = 0; j < b; j+=2) {
-            int offset = j * a;
-
-            for (int i = 0; i < a; i++) {
-                ib[index++] = offset + i;
-                ib[index++] = offset + i + a;
-            }
-            ib[index++] = offset + a * 2 - 1;
-            ib[index++] = offset + a * 2 - 1;
-
-            // posledni zpetny pruchod neprovedu, pokud je to liche
-            if((j == b -1) && b % 2 == 1) break;
-
-            for (int i = 0; i < a; i++) {
-                ib[index++] = offset + a * 3 - 1 - i;
-                ib[index++] = offset + a * 2 - 1 - i;
-            }
-            ib[index++] = offset + a * 2;
-            ib[index++] = offset + a * 2;
+        int index = 0;
+        int[] ib = new int[((b - 1) * (a * 2 + 2))];
+        for (int j = 0; j < b - 1; j++) {
+                if(j % 2 == 0){
+                    for (int i = 0; i < a; i++) {
+                        ib[index++] = (i + j * a);
+                        ib[index++] = (i + (j + 1) * a);
+                    }
+                    ib[index++] = (a - 1 + (j + 1) * a);
+                    ib[index++] = (a - 1 + (j + 1) * a);
+                }else{
+                    for (int i = 0; i < a; i++) {
+                        ib[index++] = ((a - 1) - i + (j + 1) * a);
+                        ib[index++] = ((a - 1) - i + j * a);
+                    }
+                    ib[index++] = (j + 1) * a;
+                    ib[index++] = (j + 1) * a;
+                }
         }
+
 
         OGLBuffers.Attrib[] attributes = {
                 new OGLBuffers.Attrib("inPosition", 2)
@@ -75,6 +72,8 @@ public class GridFactory {
             }
         }
         return vb;
+
     }
+
 
 }
