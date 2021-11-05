@@ -19,32 +19,38 @@ public class Renderer extends AbstractRenderer {
 
 	private double oldMx, oldMy;
 	private boolean mousePressed;
-
-	private int shaderProgram;
+	private int shaderProgramViewer, shaderProgramLight;
 	private OGLBuffers buffers;
 	private OGLRenderTarget renderTarget;
 
 	private Camera camera, cameraLight;
 	private Mat4 projection;
 	private int locView, locProjection, locSolid, locLightPosition, locEyePosition;
+	private int locViewLight, locProjectionLight, locSolidLight;
+	private int locTime;
 	private OGLTexture2D mosaicTexture;
 	private OGLTexture.Viewer viewer;
 
 	@Override
 	public void init() {
-		OGLUtils.printOGLparameters();
-		OGLUtils.printJAVAparameters();
-		OGLUtils.printLWJLparameters();
-		OGLUtils.shaderCheck();
+		// OGLUtils.printOGLparameters();
+		// OGLUtils.printJAVAparameters();
+		// OGLUtils.printLWJLparameters();
+		// OGLUtils.shaderCheck();
 
 		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-		shaderProgram = ShaderUtils.loadProgram("/start");
+		shaderProgramViewer = ShaderUtils.loadProgram("/start");
+		shaderProgramLight = ShaderUtils.loadProgram("/light");
 
-		locView = glGetUniformLocation(shaderProgram, "view");
-		locProjection = glGetUniformLocation(shaderProgram, "projection");
-		locSolid = glGetUniformLocation(shaderProgram, "solid");
-		locLightPosition = glGetUniformLocation(shaderProgram, "lightPosition");
-		locEyePosition = glGetUniformLocation(shaderProgram,"eyePosition");
+		locView = glGetUniformLocation(shaderProgramViewer, "view");
+		locProjection = glGetUniformLocation(shaderProgramViewer, "projection");
+		locSolid = glGetUniformLocation(shaderProgramViewer, "solid");
+		locLightPosition = glGetUniformLocation(shaderProgramViewer, "lightPosition");
+		locEyePosition = glGetUniformLocation(shaderProgramViewer,"eyePosition");
+
+		locViewLight = glGetUniformLocation(shaderProgramLight,"view");
+		locProjectionLight = glGetUniformLocation(shaderProgramLight,"projection");
+		locSolidLight = glGetUniformLocation(shaderProgramLight,"solid");
 
 //        view = new Mat4ViewRH();
 //        camera = new Camera(
@@ -66,7 +72,10 @@ public class Renderer extends AbstractRenderer {
 		renderTarget = new OGLRenderTarget(1024, 1024);
 		viewer = new OGLTexture2D.Viewer();
 
-		cameraLight = new Camera().withPosition(new Vec3D(5, 5, 5));
+		cameraLight = new Camera()
+				.withPosition(new Vec3D(5, 5, 5))
+				.withAzimuth(5 / 4f * Math.PI)
+				.withZenith(-1 / 5f * Math.PI);
 
 		// zadefinovany v abstracTRenderer
 		textRenderer = new OGLTextRenderer(width, height);
@@ -80,17 +89,55 @@ public class Renderer extends AbstractRenderer {
 
 	@Override
 	public void display() {
-		glFrontFace(GL_CCW);
-		glPolygonMode(GL_FRONT, GL_LINE);
-		glPolygonMode(GL_BACK, GL_FILL);
+		glEnable(GL_DEPTH_TEST); //zapnout z-buffer (kvuli textRenderu, ktery si ho vypina)
 
-		glUseProgram(shaderProgram);
+		renderFromLight();
+		renderFromViewer();
+
+		//glFrontFace(GL_CCW);
+		//glPolygonMode(GL_FRONT, GL_LINE);
+		//glPolygonMode(GL_BACK, GL_FILL);
+
+
+		//glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+
+		viewer.view(renderTarget.getColorTexture(), -1, -1, 0.7);
+		viewer.view(renderTarget.getDepthTexture(), -1, -0.3, 0.7);
+
+		textRenderer.addStr2D(width - 90, height - 5, "PGRF");
+	}
+
+	private void renderFromLight() {
+		glUseProgram(shaderProgramLight);
 		renderTarget.bind();
-		glEnable(GL_DEPTH_TEST);
+
 		glClearColor(0.5f,0,0,1);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		mosaicTexture.bind(shaderProgram, "mosaic", 0);
+		glUniformMatrix4fv(locViewLight,false,cameraLight.getViewMatrix().floatArray());
+		glUniformMatrix4fv(locProjectionLight,false,projection.floatArray());
+
+		glUniform1i(locSolidLight,1);
+		buffers.draw(GL_TRIANGLE_STRIP,shaderProgramLight);
+
+		glUniform1i(locSolidLight,2);
+		buffers.draw(GL_TRIANGLE_STRIP,shaderProgramLight);
+	}
+
+	private void renderFromViewer() {
+		glUseProgram(shaderProgramViewer);
+
+		// vychozi viewoirt - render do obrazovky
+		glBindFramebuffer(GL_FRAMEBUFFER,0);
+
+		// nutno opravit viewport, protoze render target si nastuje vlastni
+		glViewport(0, 0, width, height);
+
+		glClearColor(0,0.5f,0,1);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		mosaicTexture.bind(shaderProgramViewer, "mosaic", 0);
 
 		//cameraLight = cameraLight.up(0.05);
 		glUniform3fv(locLightPosition, ToFloatArray.convert(cameraLight.getPosition()));
@@ -101,21 +148,10 @@ public class Renderer extends AbstractRenderer {
 		glUniformMatrix4fv(locProjection, false, projection.floatArray());
 
 		glUniform1i(locSolid, 1);
-		buffers.draw(GL_TRIANGLE_STRIP, shaderProgram);
+		buffers.draw(GL_TRIANGLE_STRIP, shaderProgramViewer);
 
 		glUniform1i(locSolid, 2);
-		buffers.draw(GL_TRIANGLE_STRIP, shaderProgram);
-
-		glBindFramebuffer(GL_FRAMEBUFFER,0);
-		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-		glViewport(0, 0, width, height);
-		glClearColor(0,0.5f,0,1);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-		viewer.view(renderTarget.getColorTexture(), -1, -1, 0.7);
-		viewer.view(renderTarget.getDepthTexture(), -1, -0.3, 0.7);
-
-		textRenderer.addStr2D(width - 90, height - 5, "PGRF");
+		buffers.draw(GL_TRIANGLE_STRIP, shaderProgramViewer);
 	}
 
 	@Override

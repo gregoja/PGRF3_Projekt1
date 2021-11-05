@@ -50,10 +50,6 @@ vec3 getSpehereNormalByDerivative(vec2 pos){
 	return cross(u,v);
 }
 
-float getZ(vec2 pos){
-	return sin(pos.x * 5);
-}
-
 vec3 getPlane(vec2 pos){
 	return vec3(pos * 3 ,-1);
 	//return vec3(pos * 3 ,sin(pos.x*5));
