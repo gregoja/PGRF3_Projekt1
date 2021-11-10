@@ -19,15 +19,15 @@ public class Renderer extends AbstractRenderer {
 
 	private double oldMx, oldMy;
 	private boolean mousePressed;
+
 	private int shaderProgramViewer, shaderProgramLight;
 	private OGLBuffers buffers;
 	private OGLRenderTarget renderTarget;
 
 	private Camera camera, cameraLight;
 	private Mat4 projection;
-	private int locView, locProjection, locSolid, locLightPosition, locEyePosition;
+	private int locView, locProjection, locSolid, locLightPosition, locEyePosition, locLightVP;
 	private int locViewLight, locProjectionLight, locSolidLight;
-	private int locTime;
 	private OGLTexture2D mosaicTexture;
 	private OGLTexture.Viewer viewer;
 
@@ -47,6 +47,7 @@ public class Renderer extends AbstractRenderer {
 		locSolid = glGetUniformLocation(shaderProgramViewer, "solid");
 		locLightPosition = glGetUniformLocation(shaderProgramViewer, "lightPosition");
 		locEyePosition = glGetUniformLocation(shaderProgramViewer,"eyePosition");
+		locLightVP = glGetUniformLocation(shaderProgramViewer,"lightVP");
 
 		locViewLight = glGetUniformLocation(shaderProgramLight,"view");
 		locProjectionLight = glGetUniformLocation(shaderProgramLight,"projection");
@@ -101,7 +102,7 @@ public class Renderer extends AbstractRenderer {
 
 		//glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-
+		// spodní textura
 		viewer.view(renderTarget.getColorTexture(), -1, -1, 0.7);
 		viewer.view(renderTarget.getDepthTexture(), -1, -0.3, 0.7);
 
@@ -137,6 +138,7 @@ public class Renderer extends AbstractRenderer {
 		glClearColor(0,0.5f,0,1);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+		renderTarget.getDepthTexture().bind(shaderProgramViewer,"depthTexture",1);
 		mosaicTexture.bind(shaderProgramViewer, "mosaic", 0);
 
 		//cameraLight = cameraLight.up(0.05);
@@ -146,6 +148,8 @@ public class Renderer extends AbstractRenderer {
 		// 4*4 matice, floatova, zadana jako vector/pole
 		glUniformMatrix4fv(locView, false, camera.getViewMatrix().floatArray());
 		glUniformMatrix4fv(locProjection, false, projection.floatArray());
+		glUniformMatrix4fv(locLightVP,false,cameraLight.getViewMatrix().mul(projection).floatArray());
+
 
 		glUniform1i(locSolid, 1);
 		buffers.draw(GL_TRIANGLE_STRIP, shaderProgramViewer);

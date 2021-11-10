@@ -5,6 +5,7 @@ in vec2 inPosition; // input from the vertex buffer
 // uniform je typ hodnoty, ktera kdyz ji nastavite, tak bude pro cely ten cyklus vykresleni telesea stejna
 uniform mat4 view;
 uniform mat4 projection;
+uniform mat4 lightVP;
 
 // priznak telesa
 uniform int solid;
@@ -15,6 +16,7 @@ out vec2 texCoord;
 out vec3 normal;
 out vec3 light;
 out vec3 viewDirection;
+out vec4 depthTextureCoord;
 
 const float PI = 3.14159265;
 
@@ -32,7 +34,7 @@ vec3 getSphere(vec2 pos){
 	return vec3(x ,y,z);
 }
 
-vec3 getSpehereNormal(vec2 pos){
+vec3 getSphereNormal(vec2 pos){
 	vec3 u = getSphere(pos + vec2(0.001,0)) - getSphere(pos - vec2(0.001,0));
 	vec3 v = getSphere(pos + vec2(0,0.001)) - getSphere(pos - vec2(0,0.001));
 	return cross(u,v);
@@ -69,7 +71,7 @@ void main() {
 	vec3 pos3;
 	if(solid == 1){
 		pos3 = getSphere(position);
-		normal = getSpehereNormal(position);
+		normal = getSphereNormal(position);
 	}else if(solid == 2){
 		pos3 = getPlane(position);
 		normal = getPlaneNormal(position);
@@ -79,4 +81,13 @@ void main() {
 
 	light = lightPosition - pos3;
 	viewDirection = eyePosition - pos3;
+
+	// ziskavame pozici vrcholu, tak jak ten vrchol vidi svetlo
+	depthTextureCoord = lightVP * vec4(pos3, 1.0);
+	// XY jako souradnice v obrazovce a Z jako vzdalenost od pozorovatele (v tomto pripade svetla)
+	// dehomogenizace; po slozkach vydeleno w
+	depthTextureCoord.xyz = depthTextureCoord.xyz / depthTextureCoord.w;
+	// obrazovka je <-1;1>
+	// textura je <0;1>
+	depthTextureCoord.xyz = (depthTextureCoord.xyz + 1) / 2;
 }
