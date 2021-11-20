@@ -5,12 +5,12 @@ import lwjglutils.OGLBuffers;
 public class GridFactory {
 
     /**
-     * @param a pocet vracholu na radku => pocet sloupcu + 1
-     * @param b pocet vrcholu ve sloupci => pocet radku + 1
+     * @param a pocet vracholu na radku
+     * @param b pocet vrcholu ve sloupci
      * @return OGLBuffers
      */
     public static OGLBuffers createSimpleGrid(int a, int b) {
-        float[] vb = createVertexBuffer(a,b);
+        float[] vb = createVertexBuffer(a, b);
 
         int[] ib = new int[(a - 1) * (b - 1) * 2 * 3];
         int index = 0;
@@ -32,37 +32,37 @@ public class GridFactory {
         return new OGLBuffers(vb, attributes, ib);
     }
 
-    public static OGLBuffers createEfficientGrid(int a, int b){
-        float[] vb = createVertexBuffer(a,b);
+    public static OGLBuffers createEfficientGrid(int a, int b) {
+        float[] vb = createVertexBuffer(a, b);
 
         int index = 0;
         int[] ib = new int[((b - 1) * (a * 2 + 2))];
         for (int j = 0; j < b - 1; j++) {
-                if(j % 2 == 0){
-                    for (int i = 0; i < a; i++) {
-                        ib[index++] = (i + j * a);
-                        ib[index++] = (i + (j + 1) * a);
-                    }
-                    ib[index++] = (a - 1 + (j + 1) * a);
-                    ib[index++] = (a - 1 + (j + 1) * a);
-                }else{
-                    for (int i = 0; i < a; i++) {
-                        ib[index++] = ((a - 1) - i + (j + 1) * a);
-                        ib[index++] = ((a - 1) - i + j * a);
-                    }
-                    ib[index++] = (j + 1) * a;
-                    ib[index++] = (j + 1) * a;
+            if (j % 2 == 0) {
+                for (int i = 0; i < a; i++) {
+                    ib[index++] = (i + j * a);
+                    ib[index++] = (i + (j + 1) * a);
                 }
+                ib[index++] = (a - 1 + (j + 1) * a);
+                ib[index++] = (a - 1 + (j + 1) * a);
+            } else {
+                for (int i = 0; i < a; i++) {
+                    ib[index++] = ((a - 1) - i + (j + 1) * a);
+                    ib[index++] = ((a - 1) - i + j * a);
+                }
+                ib[index++] = (j + 1) * a;
+                ib[index++] = (j + 1) * a;
+            }
         }
 
 
         OGLBuffers.Attrib[] attributes = {
                 new OGLBuffers.Attrib("inPosition", 2)
         };
-        return new OGLBuffers(vb,attributes,ib);
+        return new OGLBuffers(vb, attributes, ib);
     }
 
-    private static float[] createVertexBuffer(int a, int b){
+    private static float[] createVertexBuffer(int a, int b) {
         float[] vb = new float[a * b * 2];
         int index = 0;
         for (int j = 0; j < b; j++) {

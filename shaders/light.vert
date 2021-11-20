@@ -15,28 +15,28 @@ const float PI = 3.14159265;
 
 // sfericka 1
 vec3 getSphere(vec2 pos){
-    float az = pos.x * PI; // souradnice X je v <-1;1> a chceme v rozsahu <-PI; PI>
-    float ze = pos.y * PI / 2; // souradnice Y je v <-1;1> a chceme v rozsahu <-PI/2; PI/2>
+    float az = pos.x * PI;// souradnice X je v <-1;1> a chceme v rozsahu <-PI; PI>
+    float ze = pos.y * PI / 2;// souradnice Y je v <-1;1> a chceme v rozsahu <-PI/2; PI/2>
     float r = 1;
 
     float x = r * cos(az) * cos(ze);
     float y = r * sin(az) * cos(ze);
     float z = r * sin(ze);
 
-    return vec3(x ,y,z);
+    return vec3(x, y, z);
 }
 
 // sfericka 2
 vec3 getSphere2(vec2 pos){
-    float az = pos.x * PI; // souradnice X je v <-1;1> a chceme v rozsahu <-PI; PI>
-    float ze = pos.y * PI / 2; // souradnice Y je v <-1;1> a chceme v rozsahu <-PI/2; PI/2>
+    float az = pos.x * PI;// souradnice X je v <-1;1> a chceme v rozsahu <-PI; PI>
+    float ze = pos.y * PI / 2;// souradnice Y je v <-1;1> a chceme v rozsahu <-PI/2; PI/2>
     float r = 1;
 
     float x = r * cos(az) * cos(ze);
     float y = r * sin(az) * cos(ze);
     float z = 0.5 * r * sin(ze);
 
-    return vec3(x ,y,z);
+    return vec3(x, y, z);
 }
 
 // sfericka 3
@@ -45,23 +45,23 @@ vec3 getSphere3(vec2 pos){
     float ze = pos.y * PI / 2;
     float r = 1;
 
-    float x = r * pow(cos(ze),3) * cos(az);
-    float y = r * pow(cos(ze),3) * sin(az);
+    float x = r * pow(cos(ze), 3) * cos(az);
+    float y = r * pow(cos(ze), 3) * sin(az);
     float z = r * sin(ze);
 
-    return vec3(x ,y,z);
+    return vec3(x, y, z);
 }
 
 // kartezka 1
 vec3 getHill(vec2 pos){
-    float z = 0.5 * cos(sqrt(20 * pow(pos.x,2) + 20 * pow(pos.y,2)));;
-    return vec3(pos.x ,pos.y,z);
+    float z = 0.5 * cos(sqrt(20 * pow(pos.x, 2) + 20 * pow(pos.y, 2)));;
+    return vec3(pos.x, pos.y, z);
 }
 
 // kartezka 2
 vec3 getDepression(vec2 pos){
-    float z = sin(sqrt(pow(pos.x,2) + pow(pos.y,2)));;
-    return vec3(pos.x ,pos.y,z);
+    float z = sin(sqrt(pow(pos.x, 2) + pow(pos.y, 2)));;
+    return vec3(pos.x, pos.y, z);
 }
 
 // cylindricka 1
@@ -76,7 +76,7 @@ vec3 getSombrero(vec2 pos){
     float y = r * sin(az) * 0.25;
     float z = h * 0.25;
 
-    return vec3(x ,y,z);
+    return vec3(x, y, z);
 }
 
 // cylindricka 2
@@ -91,12 +91,12 @@ vec3 getCylindric2(vec2 pos){
     float y = 0.25 * 3 * sin(az) * cos(r);
     float z = 0.25 * h;
 
-    return vec3(x ,y,z);
+    return vec3(x, y, z);
 }
 
 vec3 getPlane(vec2 pos){
-    if(transformInTimeMode) return vec3(pos * 3 ,sin(pos.x * 5 + time/50));
-    return vec3(pos * 3 ,-1);
+    if (transformInTimeMode) return vec3(pos * 3, sin(pos.x * 5 + time/50));
+    return vec3(pos * 3, -1);
 }
 
 void main() {
@@ -104,7 +104,7 @@ void main() {
 
     vec3 pos3;
     mat4 modelMatrix;
-    if(solid == 1){
+    if (solid == 1){
         if (solid1Type == 0) pos3 = getSphere(position);
         else if (solid1Type == 1) pos3 = getSphere2(position);
         else if (solid1Type == 2) pos3 = getSphere3(position);
@@ -113,10 +113,10 @@ void main() {
         else if (solid1Type == 5) pos3 = getSombrero(position);
         else if (solid1Type == 6) pos3 = getCylindric2(position);
         modelMatrix = model;
-    }else if(solid == 2){
+    } else if (solid == 2){
         pos3 = getPlane(position);
     }
-    if(solid != 1) modelMatrix = mat4(1);
+    if (solid != 1) modelMatrix = mat4(1);
 
     gl_Position = projection * view * modelMatrix * vec4(pos3, 1.0);
 }
